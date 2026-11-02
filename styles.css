@@ -44,3 +44,29 @@ h1,h2,h3,h4,.display{font-family:'DM Sans',system-ui,sans-serif;font-weight:700;
 .card-action{display:inline-block;margin-top:14px;color:#a97962;font-size:14px;font-weight:700}
 .how-steps{grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:850px){.how-steps{grid-template-columns:1fr}}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.brand-logo {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: block;
+  object-fit: contain;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+}
+
+/* Mobile logo size */
+
+@media (max-width: 560px) {
+  .brand-logo {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+}
