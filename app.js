@@ -24,7 +24,48 @@ const routeName = path === "/" ? "home" : path.slice(1).split("/")[0];
 const page = routeName === "track" ? "track" : routeName;
 function esc(s=""){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function navLink(href,label){return `<a href="${href}" class="${path===href?"active":""}">${label}</a>`;}
-function header(){return `<header class="site-header"><div class="container nav-wrap"><a class="brand" href="/"><span class="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="#fffaf3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4 4 6 2.8 10l3.2 1.5V20h12v-8.5l3.2-1.5L20 6l-4-2a4 4 0 0 1-8 0Z"/></svg></span>ReVastra</a><nav class="nav-links">${navLink("/","Home")}${navLink("/how-it-works","How It Works")}${navLink("/about","About Us")}${navLink("/dashboard","My Donations")}${navLink("/admin","Admin")}${navLink("/login","Login")}<a class="btn btn-dark" href="/donate/">Donate Clothes</a></nav><button class="menu-toggle" id="menuToggle" aria-label="Open menu">☰</button></div><nav class="mobile-links" id="mobileLinks">${navLink("/","Home")}${navLink("/how-it-works","How It Works")}${navLink("/about","About Us")}${navLink("/dashboard","My Donations")}${navLink("/admin","Admin")}${navLink("/login","Login")}<a class="btn btn-dark" href="/donate/">Donate Clothes</a></nav></header>`;}
+function header() {
+  return `
+    <header class="site-header">
+      <div class="container nav-wrap">
+        <a class="brand" href="/">
+          <img
+            src="/favicon.svg"
+            alt="ReVastra"
+            class="brand-logo"
+          />
+          ReVastra
+        </a>
+
+        <nav class="nav-links">
+          ${navLink("/", "Home")}
+          ${navLink("/how-it-works", "How It Works")}
+          ${navLink("/about", "About Us")}
+          ${navLink("/dashboard", "My Donations")}
+          ${navLink("/admin", "Admin")}
+          ${navLink("/login", "Login")}
+          <a class="btn btn-dark" href="/donate/">
+            Donate Clothes
+          </a>
+        </nav>
+
+        <button class="menu-toggle" id="menuToggle" aria-label="Open menu">
+          ☰
+        </button>
+      </div>
+
+      <nav class="mobile-links" id="mobileLinks">
+        ${navLink("/", "Home")}
+        ${navLink("/how-it-works", "How It Works")}
+        ${navLink("/about", "About Us")}
+        ${navLink("/dashboard", "My Donations")}
+        ${navLink("/admin", "Admin")}
+        ${navLink("/login", "Login")}
+        <a class="btn btn-dark" href="/donate/">Donate Clothes</a>
+      </nav>
+    </header>
+  `;
+}
 function footer(){return `<footer class="footer"><div class="container footer-grid"><div><strong style="font-size:21px">ReVastra</strong><p style="max-width:370px;margin-top:10px;opacity:.75">A simple way to donate pre-loved clothes, schedule a pickup, and see the difference you make.</p></div><div><strong>Quick links</strong><a href="/donate/">Donate clothes</a><a href="/how-it-works/">How it works</a><a href="/about/">About us</a><a href="/dashboard/">Track a donation</a></div></div><div class="container copyright">© 2026 ReVastra · Software Engineering Project</div></footer>`;}
 function shell(content){return header()+`<main>${content}</main>`+footer();}
 function home(){return `<section class="container hero"><div><span class="pill">♡ Community clothing donation</span><h1 style="margin:20px 0 0">Give Your Clothes a <span class="accent">Second Life</span></h1><p>Instead of letting unused clothes go to waste, donate them to people who need them. Submit a request, schedule a free doorstep pickup, and track your donation every step of the way.</p><div class="actions"><a class="btn btn-dark" href="/donate/">Donate Now →</a><a class="btn btn-outline" href="/how-it-works/">How It Works</a></div></div><img src="${A}pickup.jpg" alt="A donor handing a box of folded clothes to a volunteer"></section>
