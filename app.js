@@ -175,14 +175,39 @@ function updateAuthNavigation(user) {
   });
 }
 
-// Initial authentication check
+// Initial authentication and landing-page routing
 document.addEventListener("DOMContentLoaded", async () => {
-  if (!db) return;
+  if (!db) {
+    if (path === "/") {
+      location.replace("/login/");
+    }
+    return;
+  }
 
-  const { data, error } = await db.auth.getUser();
+  const { data, error } = await db.auth.getSession();
 
-  if (!error) {
-    updateAuthNavigation(data.user);
+  if (error) {
+    console.error("Could not check login session:", error.message);
+
+    if (path === "/") {
+      location.replace("/login/");
+    }
+    return;
+  }
+
+  const user = data.session?.user ?? null;
+
+  updateAuthNavigation(user);
+
+  // Logged-out visitors opening the website go to Login.
+  if (path === "/" && !user) {
+    location.replace("/login/");
+    return;
+  }
+
+  // Already logged-in users should not see Login again.
+  if (page === "login" && user) {
+    location.replace("/");
   }
 });
 
@@ -566,10 +591,10 @@ document.getElementById("authForm")?.addEventListener("submit", async (e) => {
         button.textContent = "Create account";
       }
     } else {
-      location.href =
-        sessionStorage.getItem("revastra_after_login") || "/dashboard/";
-
+      const next = sessionStorage.getItem("revastra_after_login");
       sessionStorage.removeItem("revastra_after_login");
+
+      location.replace(next || "/");
     }
   } catch (err) {
     msg.className = "message error";
@@ -589,7 +614,7 @@ document.getElementById("googleLogin")?.addEventListener("click", async () => {
   const { error } = await db.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: location.origin + "/dashboard/",
+      redirectTo: location.origin + "/",
     },
   });
 
