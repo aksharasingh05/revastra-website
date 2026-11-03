@@ -271,7 +271,7 @@ function donate() {
 }
 
 function schedulePickup() {
-  return `<section class="container page" style="max-width:900px"><p class="eyebrow">Pickup details</p><h1 style="font-size:2.8rem">Schedule your pickup</h1><p class="muted">Tell us where and when we should collect your donation.</p><form id="pickupForm" class="panel form-stack" style="margin-top:25px"><div class="form-grid"><label>Full name<input class="field" name="full_name" required maxlength="100" placeholder="Your name"></label><label>Contact number<input class="field" name="phone" type="tel" required pattern="[0-9()+\\- ]{8,18}" placeholder="+91 98765 43210"></label><label>Email address<input class="field" name="email" type="email" required placeholder="you@example.com"></label><label>City<input class="field" name="city" required placeholder="Your city"></label><label class="span-2">Pickup address<textarea class="field" name="pickup_address" rows="3" required placeholder="House/flat, street, area, landmark"></textarea></label><label>PIN code<input class="field" name="pincode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required placeholder="6-digit PIN code"></label><label>Preferred pickup date<input class="field" type="date" name="pickup_date" min="${new Date().toISOString().slice(0, 10)}" required></label><label class="span-2">Preferred time slot<select class="field" name="pickup_time" required><option value="">Choose a time slot</option><option>9:00 AM – 12:00 PM</option><option>12:00 PM – 3:00 PM</option><option>3:00 PM – 6:00 PM</option></select></label><label class="span-2">Additional instructions (optional)<textarea class="field" name="instructions" rows="2" placeholder="Landmark, gate instructions, etc."></textarea></label></div><button class="btn btn-dark">Confirm pickup details</button><p id="pickupMessage" class="message"></p></form></section>`;
+  return `<section class="container page" style="max-width:900px"><p class="eyebrow">Pickup details</p><h1 style="font-size:2.8rem">Schedule your pickup</h1><p class="muted">Tell us where and when we should collect your donation.</p><form id="pickupForm" class="panel form-stack" style="margin-top:25px"><div class="form-grid"><label>Full name<input class="field" name="full_name" required maxlength="100" placeholder="Your name"></label><label>Contact number<input class="field" name="phone" type="tel" required pattern="(?:[0-9]|\\+|\\(|\\)| |-){8,18}" placeholder="+91 98765 43210"></label><label>Email address<input class="field" name="email" type="email" required placeholder="you@example.com"></label><label>City<input class="field" name="city" required placeholder="Your city"></label><label class="span-2">Pickup address<textarea class="field" name="pickup_address" rows="3" required placeholder="House/flat, street, area, landmark"></textarea></label><label>PIN code<input class="field" name="pincode" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required placeholder="6-digit PIN code"></label><label>Preferred pickup date<input class="field" type="date" name="pickup_date" min="${new Date().toISOString().slice(0, 10)}" required></label><label class="span-2">Preferred time slot<select class="field" name="pickup_time" required><option value="">Choose a time slot</option><option>9:00 AM – 12:00 PM</option><option>12:00 PM – 3:00 PM</option><option>3:00 PM – 6:00 PM</option></select></label><label class="span-2">Additional instructions (optional)<textarea class="field" name="instructions" rows="2" placeholder="Landmark, gate instructions, etc."></textarea></label></div><button class="btn btn-dark">Confirm pickup details</button><p id="pickupMessage" class="message"></p></form></section>`;
 }
 
 function login() {
@@ -369,9 +369,17 @@ document.getElementById("photoInput")?.addEventListener("change", (e) => {
 // Complete pickup details for the donation created on the previous page.
 document.getElementById("pickupForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const form = e.currentTarget;
+
+  // Capture the form element directly before any asynchronous work.
+  const form = document.getElementById("pickupForm");
   const msg = document.getElementById("pickupMessage");
-  const f = new FormData(e.currentTarget);
+
+  if (!form || !msg) {
+    console.error("Pickup form or message element was not found.");
+    return;
+  }
+
+  const f = new FormData(form);
 
   if (!db) {
     msg.className = "message error";
@@ -403,12 +411,13 @@ document.getElementById("pickupForm")?.addEventListener("submit", async (e) => {
   const submitButton = form.querySelector(
     'button[type="submit"], button:not([type])',
   );
+
   if (submitButton) {
     submitButton.disabled = true;
     submitButton.textContent = "Saving pickup…";
   }
 
-  const { error } = await db
+  const { data: updatedDonation, error } = await db
     .from("donations")
     .update({
       full_name: f.get("full_name"),
@@ -420,14 +429,29 @@ document.getElementById("pickupForm")?.addEventListener("submit", async (e) => {
       preferred_pickup_date: f.get("pickup_date"),
       preferred_pickup_time: f.get("pickup_time"),
       instructions: f.get("instructions"),
-      status: "pending",
+      status: "scheduled",
     })
     .eq("id", donationId)
-    .eq("donor_id", user.id);
+    .eq("donor_id", user.id)
+    .select("id")
+    .maybeSingle();
 
   if (error) {
     msg.className = "message error";
     msg.textContent = "Could not save pickup details: " + error.message;
+
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.textContent = "Confirm pickup details";
+    }
+
+    return;
+  }
+
+  if (!updatedDonation) {
+    msg.className = "message error";
+    msg.textContent =
+      "The donation could not be found for this account. Please submit your donation again.";
 
     if (submitButton) {
       submitButton.disabled = false;
@@ -483,7 +507,9 @@ document.querySelectorAll("[data-mode]").forEach((b) =>
 
 document.getElementById("authForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const form = new FormData(e.currentTarget);
+
+  const formElement = e.currentTarget;
+  const form = new FormData(formElement);
   const msg = document.getElementById("authMessage");
 
   if (!db) {
@@ -496,7 +522,7 @@ document.getElementById("authForm")?.addEventListener("submit", async (e) => {
   const password = form.get("password");
   const full_name = form.get("full_name");
 
-  const button = e.currentTarget.querySelector(
+  const button = formElement.querySelector(
     "button[type='submit'], button:not([type])",
   );
 
@@ -590,10 +616,10 @@ document
   .getElementById("donationForm")
   ?.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const form = e.currentTarget;
 
+    const form = e.currentTarget;
     const msg = document.getElementById("donationMessage");
-    const f = new FormData(e.currentTarget);
+    const f = new FormData(form);
     const files = selectedPhotos || [];
 
     if (!db) {
