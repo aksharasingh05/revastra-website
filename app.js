@@ -114,7 +114,9 @@ function header() {
           ${navLink("/about", "About Us")}
           ${navLink("/dashboard", "My Donations")}
           ${navLink("/admin", "Admin")}
-          ${navLink("/login", "Login")}
+
+          <a href="/login" data-auth-link>Login</a>
+
           <a class="btn btn-dark" href="/donate/">
             Donate Clothes
           </a>
@@ -131,12 +133,83 @@ function header() {
         ${navLink("/about", "About Us")}
         ${navLink("/dashboard", "My Donations")}
         ${navLink("/admin", "Admin")}
-        ${navLink("/login", "Login")}
+
+        <a href="/login" data-auth-link>Login</a>
+
         <a class="btn btn-dark" href="/donate/">Donate Clothes</a>
       </nav>
     </header>
   `;
 }
+
+function updateAuthNavigation(user) {
+  document.querySelectorAll("[data-auth-link]").forEach((link) => {
+    if (user) {
+      link.href = "/";
+      link.dataset.authAction = "logout";
+
+      link.innerHTML = `
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="17"
+          height="17"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          style="vertical-align: middle; margin-right: 5px;"
+        >
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Logout
+      `;
+    } else {
+      link.href = "/login";
+      link.dataset.authAction = "login";
+      link.textContent = "Login";
+    }
+  });
+}
+
+// Initial authentication check
+document.addEventListener("DOMContentLoaded", async () => {
+  if (!db) return;
+
+  const { data, error } = await db.auth.getUser();
+
+  if (!error) {
+    updateAuthNavigation(data.user);
+  }
+});
+
+// Update navbar whenever authentication changes
+if (db) {
+  db.auth.onAuthStateChange((event, session) => {
+    updateAuthNavigation(session?.user ?? null);
+  });
+}
+
+// Logout click handler
+document.addEventListener("click", async (e) => {
+  const link = e.target.closest('[data-auth-action="logout"]');
+
+  if (!link) return;
+
+  e.preventDefault();
+
+  const { error } = await db.auth.signOut();
+
+  if (error) {
+    alert("Logout failed: " + error.message);
+    return;
+  }
+
+  window.location.href = "/";
+});
 
 function footer() {
   return `<footer class="footer"><div class="container footer-grid"><div><strong style="font-size:21px">ReVastra</strong><p style="max-width:370px;margin-top:10px;opacity:.75">A simple way to donate pre-loved clothes, schedule a pickup, and see the difference you make.</p></div><div><strong>Quick links</strong><a href="/donate/">Donate clothes</a><a href="/how-it-works/">How it works</a><a href="/about/">About us</a><a href="/dashboard/">Track a donation</a></div></div><div class="container copyright">© 2026 ReVastra · Software Engineering Project</div></footer>`;
@@ -411,7 +484,6 @@ document.querySelectorAll("[data-mode]").forEach((b) =>
 
 document.getElementById("authForm")?.addEventListener("submit", async (e) => {
   e.preventDefault();
-
   const form = new FormData(e.currentTarget);
   const msg = document.getElementById("authMessage");
 
@@ -519,6 +591,7 @@ document
   .getElementById("donationForm")
   ?.addEventListener("submit", async (e) => {
     e.preventDefault();
+    const form = e.currentTarget;
 
     const msg = document.getElementById("donationMessage");
     const f = new FormData(e.currentTarget);
@@ -572,7 +645,7 @@ document
       return;
     }
 
-    const button = e.currentTarget.querySelector(
+    const button = form.querySelector(
       'button[type="submit"], button:not([type])',
     );
 
